@@ -1,0 +1,105 @@
+<resources>
+    <string name="app_name">CloudNG</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_profiles">Profiles</string>
+    <string name="nav_subscriptions">Subscriptions</string>
+    <string name="nav_routing">Routing</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_logs">Logs</string>
+
+    <!-- Home screen -->
+    <string name="home_connect">Connect</string>
+    <string name="home_disconnect">Disconnect</string>
+    <string name="home_connecting">Connecting…</string>
+    <string name="home_disconnecting">Disconnecting…</string>
+    <string name="home_status_connected">Connected</string>
+    <string name="home_status_disconnected">Disconnected</string>
+    <string name="home_status_error">Error</string>
+    <string name="home_no_profile">No profile selected</string>
+    <string name="home_latency_test">Test Latency</string>
+    <string name="home_traffic_up">↑ %1$s</string>
+    <string name="home_traffic_down">↓ %1$s</string>
+
+    <!-- Profiles -->
+    <string name="profiles_title">Profiles</string>
+    <string name="profiles_add">Add Profile</string>
+    <string name="profiles_edit">Edit Profile</string>
+    <string name="profiles_delete">Delete</string>
+    <string name="profiles_import_clipboard">Import from Clipboard</string>
+    <string name="profiles_import_qr">Scan QR Code</string>
+    <string name="profiles_import_file">Import from File</string>
+    <string name="profiles_export">Export</string>
+    <string name="profiles_share">Share</string>
+    <string name="profiles_empty">No profiles yet. Add one to get started.</string>
+
+    <!-- Subscriptions -->
+    <string name="subscriptions_title">Subscriptions</string>
+    <string name="subscriptions_add">Add Subscription</string>
+    <string name="subscriptions_update">Update Now</string>
+    <string name="subscriptions_last_updated">Last updated: %1$s</string>
+    <string name="subscriptions_url_hint">Subscription URL</string>
+    <string name="subscriptions_name_hint">Display Name</string>
+
+    <!-- Routing -->
+    <string name="routing_title">Routing Rules</string>
+    <string name="routing_mode_global">Global Proxy</string>
+    <string name="routing_mode_bypass_lan">Bypass LAN</string>
+    <string name="routing_mode_bypass_china">Bypass Mainland</string>
+    <string name="routing_mode_custom">Custom</string>
+    <string name="routing_per_app">Per-App Proxy</string>
+    <string name="routing_bypass_list">Bypass List</string>
+
+    <!-- DNS -->
+    <string name="dns_title">DNS Settings</string>
+    <string name="dns_mode_system">System DNS</string>
+    <string name="dns_mode_doh">DNS over HTTPS</string>
+    <string name="dns_mode_dot">DNS over TLS</string>
+    <string name="dns_mode_fake">Fake DNS (core)</string>
+    <string name="dns_server_hint">DNS server URL</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_general">General</string>
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_auto_start">Auto-start on Boot</string>
+    <string name="settings_kill_switch">Kill Switch</string>
+    <string name="settings_safe_mode">Safe Mode (troubleshoot)</string>
+    <string name="settings_mtu">MTU</string>
+    <string name="settings_socks_port">SOCKS Port</string>
+    <string name="settings_http_port">HTTP Port</string>
+    <string name="settings_log_level">Log Level</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_export_diagnostics">Export Diagnostics</string>
+    <string name="settings_core_version">Core Version</string>
+    <string name="settings_app_version">App Version</string>
+
+    <!-- Notification -->
+    <string name="notification_channel_vpn">VPN Status</string>
+    <string name="notification_channel_vpn_desc">Shows active VPN connection status</string>
+    <string name="notification_connected">CloudNG — Connected</string>
+    <string name="notification_action_disconnect">Disconnect</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title">Welcome to CloudNG</string>
+    <string name="onboarding_vpn_consent_title">VPN Permission Required</string>
+    <string name="onboarding_vpn_consent_body">CloudNG needs to create a VPN connection to route traffic through your chosen proxy. This keeps your connection secure. CloudNG does not log your traffic.</string>
+    <string name="onboarding_grant">Grant Permission</string>
+    <string name="onboarding_skip">Skip for now</string>
+
+    <!-- Errors -->
+    <string name="error_invalid_config">Invalid configuration. Please check your profile.</string>
+    <string name="error_connection_failed">Connection failed: %1$s</string>
+    <string name="error_import_failed">Import failed: unrecognized format.</string>
+    <string name="error_subscription_fetch">Failed to fetch subscription: %1$s</string>
+    <string name="error_permission_denied">Permission denied.</string>
+
+    <!-- Misc -->
+    <string name="action_ok">OK</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_save">Save</string>
+    <string name="action_delete_confirm">Delete this item?</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+</resources>

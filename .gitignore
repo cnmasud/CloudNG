@@ -1,0 +1,64 @@
+# Gradle files
+*.iml
+.gradle
+**/build
+!src/**/build/
+/captures
+.externalNativeBuild
+.cxx
+
+# Local configuration files
+/local.properties
+local.properties
+
+# IDE files
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+/.idea/gradle.xml
+/.idea/compiler.xml
+/.idea/deploymentTargetSelector.xml
+/.idea/runConfigurations.xml
+/.idea/inspectionProfiles/
+/.idea/.gitignore
+/.idea/misc.xml
+*.iws
+*.ipr
+
+# macOS
+.DS_Store
+
+# Keystore files (SECURITY CRITICAL - NEVER COMMIT)
+*.jks
+*.keystore
+*.p12
+*.pfx
+
+# Signing configuration (contains passwords)
+signing.properties
+keystore.properties
+
+# API keys and secrets
+**/res/values/secrets.xml
+**/res/values/api_keys.xml
+secrets.properties
+credentials.json
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+fastlane/readme.md
+
+# NDK/CMake
+obj/
+
+# Temporary files
+*.swp
+*.tmp
+*.temp
+*.log

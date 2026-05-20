@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="cloud_teal_primary">#FF00838F</color>
+    <color name="cloud_teal_dark">#FF00575F</color>
+    <color name="cloud_teal_light">#FF80DEEA</color>
+    <color name="cloud_surface">#FF0D1B2A</color>
+    <color name="cloud_on_surface">#FFE0F7FA</color>
+    <color name="status_connected">#FF00C853</color>
+    <color name="status_connecting">#FFFFAB00</color>
+    <color name="status_error">#FFD32F2F</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>
