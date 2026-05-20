@@ -145,22 +145,23 @@ class XrayCoreBridge @Inject constructor(
     override fun status(): CoreStatus = CoreStatus(state = _state.value, coreVersion = coreVersion())
 
     override suspend fun ping(profile: Profile): PingResult {
-        return try {
-            val testConfig = generateConfig(profile, RoutingConfig(), DnsConfig())
-            val latency = withContext(Dispatchers.IO) {
-                val ctrl = coreController
-                if (ctrl != null) {
-                    ctrl.measureDelay(testConfig)
-                } else {
-                    ensureCoreEnvInit()
-                    val tempCtrl = Libv2ray.newCoreController(coreCallback)
-                    val result = tempCtrl.measureDelay(testConfig)
-                    result
-                }
+        return withContext(Dispatchers.IO) {
+            val hosts = listOf("1.1.1.1" to 80, "8.8.8.8" to 80)
+            var best = Long.MAX_VALUE
+            for ((host, port) in hosts) {
+                try {
+                    val start = System.currentTimeMillis()
+                    val socket = java.net.Socket()
+                    socket.connect(java.net.InetSocketAddress(host, port), 3000)
+                    socket.close()
+                    val elapsed = System.currentTimeMillis() - start
+                    if (elapsed < best) best = elapsed
+                } catch (_: Exception) {}
             }
-            PingResult(profileId = profile.id, latencyMs = latency, success = latency >= 0)
-        } catch (e: Exception) {
-            PingResult(profileId = profile.id, latencyMs = -1, success = false, error = e.message)
+            if (best == Long.MAX_VALUE)
+                PingResult(profileId = profile.id, latencyMs = -1, success = false, error = "Unreachable")
+            else
+                PingResult(profileId = profile.id, latencyMs = best, success = true)
         }
     }
 
