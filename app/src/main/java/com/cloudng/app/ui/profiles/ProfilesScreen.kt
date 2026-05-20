@@ -8,8 +8,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +48,10 @@ fun ProfilesScreen(
             TopAppBar(
                 title = { Text("Profiles") },
                 actions = {
+                    IconButton(onClick = { viewModel.onEvent(ProfilesEvent.PingAll) },
+                        enabled = uiState.profiles.isNotEmpty() && uiState.pingingProfileIds.isEmpty()) {
+                        Icon(Icons.Default.NetworkCheck, "Ping All")
+                    }
                     IconButton(onClick = { showImportSheet = true }) {
                         Icon(Icons.Default.Download, "Import")
                     }
@@ -68,12 +78,14 @@ fun ProfilesScreen(
                     ProfileCard(
                         profile = profile,
                         isSelected = profile.id == uiState.selectedProfileId,
+                        isPinging = profile.id in uiState.pingingProfileIds,
                         onSelect = {
                             viewModel.onEvent(ProfilesEvent.SelectProfile(profile))
                             onProfileSelected()
                         },
                         onEdit = { onNavigateToEdit(profile.id) },
-                        onDelete = { deleteTarget = profile }
+                        onDelete = { deleteTarget = profile },
+                        onPing = { viewModel.onEvent(ProfilesEvent.PingProfile(profile)) }
                     )
                 }
             }
@@ -119,9 +131,11 @@ fun ProfilesScreen(
 private fun ProfileCard(
     profile: Profile,
     isSelected: Boolean,
+    isPinging: Boolean,
     onSelect: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onPing: () -> Unit
 ) {
     val protocolColor = when (profile.protocol) {
         com.cloudng.app.data.model.Protocol.VLESS -> androidx.compose.ui.graphics.Color(0xFF7C4DFF)
@@ -195,18 +209,43 @@ private fun ProfileCard(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                     maxLines = 1
                 )
-                if (profile.latencyMs >= 0) {
-                    val latencyColor = when {
-                        profile.latencyMs < 150 -> StatusConnected
-                        profile.latencyMs < 400 -> androidx.compose.ui.graphics.Color(0xFFFFAB00)
-                        else -> androidx.compose.ui.graphics.Color(0xFFD32F2F)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    if (isPinging) {
+                        val rotation by rememberInfiniteTransition(label = "ping").animateFloat(
+                            initialValue = 0f, targetValue = 360f,
+                            animationSpec = infiniteRepeatable(tween(800, easing = LinearEasing)),
+                            label = "rot"
+                        )
+                        Icon(
+                            Icons.Default.Sync, null,
+                            modifier = Modifier.size(12.dp).graphicsLayer { rotationZ = rotation },
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text("Testing...", style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary)
+                    } else if (profile.latencyMs >= 0) {
+                        val latencyColor = when {
+                            profile.latencyMs < 150 -> StatusConnected
+                            profile.latencyMs < 400 -> androidx.compose.ui.graphics.Color(0xFFFFAB00)
+                            else -> androidx.compose.ui.graphics.Color(0xFFD32F2F)
+                        }
+                        val dot = when {
+                            profile.latencyMs < 150 -> "●"
+                            profile.latencyMs < 400 -> "●"
+                            else -> "●"
+                        }
+                        Text(dot, style = MaterialTheme.typography.labelSmall, color = latencyColor)
+                        Text("${profile.latencyMs}ms",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                            color = latencyColor)
                     }
-                    Text(
-                        "${profile.latencyMs}ms",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                        color = latencyColor
-                    )
                 }
+            }
+            IconButton(onClick = onPing, enabled = !isPinging, modifier = Modifier.size(36.dp)) {
+                Icon(Icons.Default.NetworkCheck, "Ping",
+                    modifier = Modifier.size(18.dp),
+                    tint = if (isPinging) MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+                           else MaterialTheme.colorScheme.primary.copy(alpha = 0.8f))
             }
             IconButton(onClick = onEdit, modifier = Modifier.size(36.dp)) {
                 Icon(Icons.Default.Edit, "Edit",

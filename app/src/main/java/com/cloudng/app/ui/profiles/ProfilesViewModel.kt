@@ -4,6 +4,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cloudng.app.core.CoreBridge
 import com.cloudng.app.core.ParseResult
 import com.cloudng.app.core.ProfileParser
 import com.cloudng.app.data.model.Profile
@@ -20,7 +21,8 @@ data class ProfilesUiState(
     val selectedProfileId: String? = null,
     val importError: String? = null,
     val importSuccess: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val pingingProfileIds: Set<String> = emptySet()
 )
 
 sealed class ProfilesEvent {
@@ -30,6 +32,8 @@ sealed class ProfilesEvent {
     object ImportFromClipboard : ProfilesEvent()
     data class SaveProfile(val profile: Profile) : ProfilesEvent()
     object DismissMessages : ProfilesEvent()
+    data class PingProfile(val profile: Profile) : ProfilesEvent()
+    object PingAll : ProfilesEvent()
 }
 
 @HiltViewModel
@@ -37,6 +41,7 @@ class ProfilesViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val settingsRepository: SettingsRepository,
     private val parser: ProfileParser,
+    private val coreBridge: CoreBridge,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -80,6 +85,32 @@ class ProfilesViewModel @Inject constructor(
             }
             ProfilesEvent.DismissMessages -> _uiState.update {
                 it.copy(importError = null, importSuccess = null)
+            }
+            is ProfilesEvent.PingProfile -> pingProfile(event.profile)
+            ProfilesEvent.PingAll -> pingAll()
+        }
+    }
+
+    private fun pingProfile(profile: Profile) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(pingingProfileIds = it.pingingProfileIds + profile.id) }
+            val result = coreBridge.ping(profile)
+            profileRepository.updateLatency(profile.id, result.latencyMs)
+            _uiState.update { it.copy(pingingProfileIds = it.pingingProfileIds - profile.id) }
+        }
+    }
+
+    private fun pingAll() {
+        val profiles = _uiState.value.profiles
+        if (profiles.isEmpty()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(pingingProfileIds = profiles.map { p -> p.id }.toSet()) }
+            profiles.forEach { profile ->
+                launch {
+                    val result = coreBridge.ping(profile)
+                    profileRepository.updateLatency(profile.id, result.latencyMs)
+                    _uiState.update { it.copy(pingingProfileIds = it.pingingProfileIds - profile.id) }
+                }
             }
         }
     }
