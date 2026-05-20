@@ -22,23 +22,10 @@ android {
 
     signingConfigs {
         create("release") {
-            // Load signing credentials from environment or local.properties
-            // Set these in local.properties (not committed) or environment variables:
-            // RELEASE_STORE_FILE=../cloudng-release.jks
-            // RELEASE_STORE_PASSWORD=your_password
-            // RELEASE_KEY_ALIAS=your_alias
-            // RELEASE_KEY_PASSWORD=your_password
-
-            val localProps = File(rootDir, "local.properties")
-            val props = java.util.Properties()
-            if (localProps.exists()) {
-                props.load(localProps.inputStream())
-            }
-
-            storeFile = file(props.getProperty("RELEASE_STORE_FILE") ?: System.getenv("RELEASE_STORE_FILE") ?: "cloudng-release.jks")
-            storePassword = props.getProperty("RELEASE_STORE_PASSWORD") ?: System.getenv("RELEASE_STORE_PASSWORD") ?: ""
-            keyAlias = props.getProperty("RELEASE_KEY_ALIAS") ?: System.getenv("RELEASE_KEY_ALIAS") ?: ""
-            keyPassword = props.getProperty("RELEASE_KEY_PASSWORD") ?: System.getenv("RELEASE_KEY_PASSWORD") ?: ""
+            storeFile = file("cloudng-release.jks")
+            storePassword = "cloudng123"
+            keyAlias = "cloudng"
+            keyPassword = "cloudng123"
         }
     }
 

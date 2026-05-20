@@ -89,7 +89,11 @@ class HomeViewModel @Inject constructor(
             HomeEvent.StopVpn -> {
                 Intent(context, CloudVpnService::class.java).also {
                     it.action = CloudVpnService.ACTION_STOP
-                    context.startService(it)
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        context.startForegroundService(it)
+                    } else {
+                        context.startService(it)
+                    }
                 }
             }
             HomeEvent.NoProfileSelected -> {

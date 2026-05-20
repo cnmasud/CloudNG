@@ -91,6 +91,9 @@ class CloudVpnService : VpnService() {
     private fun stop() {
         scope.launch {
             coreBridge.stop()
+            tun?.close()
+            tun = null
+            stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
     }

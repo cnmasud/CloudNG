@@ -217,16 +217,33 @@ class XrayCoreBridge @Inject constructor(
         val config = JSONObject()
 
         config.put("log", JSONObject().apply {
-            put("loglevel", "warning")
+            put("loglevel", "info")
+            put("access", "")
+            put("error", "")
         })
+
+        config.put("policy", JSONObject().apply {
+            put("levels", JSONObject().apply {
+                put("0", JSONObject().apply {
+                    put("statsUserUplink", true)
+                    put("statsUserDownlink", true)
+                })
+            })
+            put("system", JSONObject().apply {
+                put("statsOutboundUplink", true)
+                put("statsOutboundDownlink", true)
+            })
+        })
+
+        config.put("stats", JSONObject())
 
         config.put("inbounds", JSONArray().apply {
             if (tunFd >= 0) {
                 put(JSONObject().apply {
                     put("tag", "tun")
                     put("protocol", "dokodemo-door")
-                    put("port", 12345)
-                    put("listen", "0.0.0.0")
+                    put("port", 10808)
+                    put("listen", "127.0.0.1")
                     put("settings", JSONObject().apply {
                         put("network", "tcp,udp")
                         put("followRedirect", true)
@@ -235,13 +252,9 @@ class XrayCoreBridge @Inject constructor(
                     put("sniffing", JSONObject().apply {
                         put("enabled", true)
                         put("destOverride", JSONArray().apply {
-                            put("http"); put("tls")
+                            put("http"); put("tls"); put("quic")
                         })
-                    })
-                    put("streamSettings", JSONObject().apply {
-                        put("sockopt", JSONObject().apply {
-                            put("tproxy", "redirect")
-                        })
+                        put("routeOnly", false)
                     })
                 })
             }
@@ -408,6 +421,10 @@ class XrayCoreBridge @Inject constructor(
                         if (profile.sni.isNotBlank()) put("serverName", profile.sni)
                         if (profile.fingerprint.isNotBlank()) put("fingerprint", profile.fingerprint)
                         put("allowInsecure", false)
+                        put("alpn", JSONArray().apply {
+                            if (profile.network == Network.HTTP2) put("h2")
+                            put("http/1.1")
+                        })
                     })
                 }
                 TlsType.REALITY -> put("security", "reality").also {
