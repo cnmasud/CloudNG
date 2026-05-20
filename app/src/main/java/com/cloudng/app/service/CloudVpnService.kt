@@ -7,6 +7,7 @@ import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.cloudng.app.CloudNGApp
 import com.cloudng.app.MainActivity
 import com.cloudng.app.R
@@ -20,8 +21,8 @@ import com.cloudng.app.receiver.VpnControlReceiver
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
+import java.io.File
 import javax.inject.Inject
-import androidx.core.app.NotificationCompat
 
 @AndroidEntryPoint
 class CloudVpnService : VpnService() {
@@ -33,6 +34,7 @@ class CloudVpnService : VpnService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var tun: ParcelFileDescriptor? = null
+    private var tun2socksProcess: Process? = null
 
     companion object {
         const val ACTION_START = "com.cloudng.app.vpn.START"
@@ -75,6 +77,7 @@ class CloudVpnService : VpnService() {
                     stopSelf(); return@launch
                 }
                 Log.d(TAG, "TUN interface opened: $fd")
+                startTun2Socks(fd, settings.socksPort)
                 coreBridge.start(profile, routing, dns, fd).onFailure { e ->
                     Log.e(TAG, "Core start failed", e)
                     tun?.close(); tun = null
@@ -90,6 +93,7 @@ class CloudVpnService : VpnService() {
 
     private fun stop() {
         scope.launch {
+            stopTun2Socks()
             coreBridge.stop()
             tun?.close()
             tun = null
@@ -98,10 +102,78 @@ class CloudVpnService : VpnService() {
         }
     }
 
+    private fun startTun2Socks(tunFd: Int, socksPort: Int) {
+        try {
+            val soPath = extractTun2Socks()
+            if (soPath == null) {
+                Log.e(TAG, "libtun2socks.so not found, traffic will not be tunneled")
+                return
+            }
+            val sockPath = "${filesDir.absolutePath}/tun2socks.sock"
+            File(sockPath).delete()
+
+            val cmd = arrayOf(
+                soPath,
+                "--netif-ipaddr", "26.26.26.2",
+                "--netif-netmask", "255.255.255.0",
+                "--socks-server-addr", "127.0.0.1:$socksPort",
+                "--tunmtu", "1500",
+                "--sock-path", sockPath,
+                "--enable-udprelay",
+                "--loglevel", "warning"
+            )
+            Log.d(TAG, "Starting tun2socks")
+            tun2socksProcess = ProcessBuilder(*cmd)
+                .redirectErrorStream(true)
+                .start()
+            scope.launch(Dispatchers.IO) {
+                tun2socksProcess?.inputStream?.bufferedReader()?.forEachLine { Log.d(TAG, "[tun2socks] $it") }
+            }
+
+            // Give tun2socks time to create the socket, then send the TUN fd
+            Thread.sleep(300)
+            sendFdOverSocket(sockPath, tunFd)
+            Log.i(TAG, "tun2socks started and TUN fd sent")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to start tun2socks", e)
+        }
+    }
+
+    private fun sendFdOverSocket(sockPath: String, fd: Int) {
+        try {
+            val localSocket = android.net.LocalSocket()
+            localSocket.connect(android.net.LocalSocketAddress(sockPath, android.net.LocalSocketAddress.Namespace.FILESYSTEM))
+            localSocket.setFileDescriptorsForSend(arrayOf(tun?.fileDescriptor))
+            localSocket.outputStream.write(42)
+            localSocket.outputStream.flush()
+            localSocket.close()
+            Log.d(TAG, "TUN fd sent to tun2socks via sock-path")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send fd to tun2socks", e)
+        }
+    }
+
+    private fun stopTun2Socks() {
+        tun2socksProcess?.destroy()
+        tun2socksProcess = null
+        Log.d(TAG, "tun2socks stopped")
+    }
+
+    private fun extractTun2Socks(): String? {
+        val nativeDir = applicationInfo.nativeLibraryDir
+        val soFile = File(nativeDir, "libtun2socks.so")
+        if (soFile.exists()) {
+            soFile.setExecutable(true)
+            return soFile.absolutePath
+        }
+        Log.e(TAG, "libtun2socks.so not in nativeLibraryDir: $nativeDir")
+        return null
+    }
+
     private fun buildTun(settings: AppSettings, routing: RoutingConfig): ParcelFileDescriptor {
         val builder = Builder()
             .setMtu(settings.mtu)
-            .addAddress("10.0.0.1", 32)
+            .addAddress("26.26.26.1", 24)
             .addAddress("fd00::1", 128)
             .addDnsServer("1.1.1.1")
             .addDnsServer("2606:4700:4700::1111")
@@ -132,6 +204,9 @@ class CloudVpnService : VpnService() {
             builder.addRoute("0.0.0.0", 0)
             builder.addRoute("::", 0)
         }
+
+        // Always exclude our own app to prevent Xray's outbound connections looping back through TUN
+        runCatching { builder.addDisallowedApplication(packageName) }
 
         if (routing.perAppMode != com.cloudng.app.data.model.PerAppProxyMode.DISABLED) {
             routing.bypassedApps.forEach { pkg ->
@@ -181,7 +256,7 @@ class CloudVpnService : VpnService() {
     }
 
     override fun onDestroy() {
-        scope.launch { runCatching { coreBridge.stop() } }
+        scope.launch { runCatching { stopTun2Socks(); coreBridge.stop() } }
         tun?.close()
         tun = null
         scope.cancel()

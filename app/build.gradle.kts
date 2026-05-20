@@ -54,6 +54,12 @@ android {
         compose = true
     }
 
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
+
     kapt {
         arguments {
             arg("room.schemaLocation", "$projectDir/schemas")

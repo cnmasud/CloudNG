@@ -238,26 +238,26 @@ class XrayCoreBridge @Inject constructor(
         config.put("stats", JSONObject())
 
         config.put("inbounds", JSONArray().apply {
-            if (tunFd >= 0) {
-                put(JSONObject().apply {
-                    put("tag", "tun")
-                    put("protocol", "dokodemo-door")
-                    put("port", 10808)
-                    put("listen", "127.0.0.1")
-                    put("settings", JSONObject().apply {
-                        put("network", "tcp,udp")
-                        put("followRedirect", true)
-                        put("userLevel", 0)
-                    })
-                    put("sniffing", JSONObject().apply {
-                        put("enabled", true)
-                        put("destOverride", JSONArray().apply {
-                            put("http"); put("tls"); put("quic")
-                        })
-                        put("routeOnly", false)
-                    })
+            // tun2socks connects here via SOCKS5 — listen on loopback port 10808
+            put(JSONObject().apply {
+                put("tag", "socks-tun")
+                put("protocol", "socks")
+                put("port", 10808)
+                put("listen", "127.0.0.1")
+                put("settings", JSONObject().apply {
+                    put("auth", "noauth")
+                    put("udp", true)
+                    put("userLevel", 0)
                 })
-            }
+                put("sniffing", JSONObject().apply {
+                    put("enabled", true)
+                    put("destOverride", JSONArray().apply {
+                        put("http"); put("tls"); put("quic")
+                    })
+                    put("routeOnly", false)
+                })
+            })
+            // External SOCKS proxy for manual use
             put(JSONObject().apply {
                 put("tag", "socks")
                 put("port", currentSettings.socksPort)
