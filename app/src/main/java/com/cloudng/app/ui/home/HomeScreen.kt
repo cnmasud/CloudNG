@@ -32,7 +32,6 @@ import com.cloudng.app.core.CoreState
 import com.cloudng.app.data.model.Profile
 import com.cloudng.app.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToProfiles: () -> Unit,
@@ -80,47 +79,41 @@ fun HomeScreen(
                 )
             )
     ) {
-        Scaffold(
-            containerColor = Color.Transparent,
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                Icons.Default.Cloud,
-                                null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "CloudNG",
-                                fontWeight = FontWeight.Bold,
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = Color.Transparent
-                    ),
-                    actions = {
-                        IconButton(onClick = { viewModel.onEvent(HomeEvent.TestLatency) }) {
-                            Icon(Icons.Default.NetworkCheck, "Test Latency")
-                        }
-                    }
-                )
-            }
-        ) { padding ->
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Header row — directly below status bar, no gap
+            Row(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Spacer(Modifier.height(24.dp))
+                Icon(
+                    Icons.Default.Cloud,
+                    null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    "CloudNG",
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = { viewModel.onEvent(HomeEvent.TestLatency) }) {
+                    Icon(Icons.Default.NetworkCheck, "Test Latency")
+                }
+            }
 
-                ConnectButton(
+            Spacer(Modifier.height(16.dp))
+
+            ConnectButton(
                     state = uiState.coreState,
                     onClick = {
                         when (uiState.coreState) {
@@ -156,7 +149,6 @@ fun HomeScreen(
 
                 Spacer(Modifier.weight(1f))
             }
-        }
     }
 
     uiState.errorMessage?.let { msg ->
