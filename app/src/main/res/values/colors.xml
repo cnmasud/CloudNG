@@ -10,4 +10,5 @@
     <color name="status_error">#FFD32F2F</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="ic_launcher_background">#FF1E1248</color>
 </resources>
