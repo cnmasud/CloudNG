@@ -223,21 +223,19 @@ private fun ProfileCard(
                         )
                         Text("Testing...", style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary)
-                    } else if (profile.latencyMs >= 0) {
+                    } else {
                         val latencyColor = when {
+                            profile.latencyMs < 0  -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
                             profile.latencyMs < 150 -> StatusConnected
                             profile.latencyMs < 400 -> androidx.compose.ui.graphics.Color(0xFFFFAB00)
                             else -> androidx.compose.ui.graphics.Color(0xFFD32F2F)
                         }
-                        val dot = when {
-                            profile.latencyMs < 150 -> "●"
-                            profile.latencyMs < 400 -> "●"
-                            else -> "●"
-                        }
-                        Text(dot, style = MaterialTheme.typography.labelSmall, color = latencyColor)
-                        Text("${profile.latencyMs}ms",
+                        Text("●", style = MaterialTheme.typography.labelSmall, color = latencyColor)
+                        Text(
+                            if (profile.latencyMs < 0) "—" else "${profile.latencyMs}ms",
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                            color = latencyColor)
+                            color = latencyColor
+                        )
                     }
                 }
             }
